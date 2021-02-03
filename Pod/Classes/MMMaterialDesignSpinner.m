@@ -12,19 +12,13 @@ static NSString *kMMRingStrokeAnimationKey = @"mmmaterialdesignspinner.stroke";
 static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotation";
 
 @interface MMMaterialDesignSpinner ()
-@property (nonatomic, readonly) CAShapeLayer *progressLayer;
+@property (nonatomic, readonly) CAShapeLayer *progressLayerSpinner;
 @property (nonatomic, readwrite) BOOL isAnimating;
 @end
 
 @implementation MMMaterialDesignSpinner
 
-@synthesize progressLayer=_progressLayer;
-@synthesize hidesWhenStopped=_hidesWhenStopped;
-@synthesize activityIndicatorViewStyle=_activityIndicatorViewStyle;
-@synthesize color=_color;
-@synthesize timingFunction=_timingFunction;
-@synthesize duration=_duration;
-@synthesize percentComplete=_percentComplete;
+@synthesize progressLayerSpinner=_progressLayerSpinner;
 
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -40,46 +34,35 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
     return self;
 }
 
-- (void)awakeFromNib
-{
-    [super awakeFromNib];
+- (void)awakeFromNib {
     [self initialize];
 }
 
 - (void)initialize {
     self.duration = 1.5f;
-    self.percentComplete = 0.f;
     _timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     
-    [self.layer addSublayer:self.progressLayer];
+    [self.layer addSublayer:self.progressLayerSpinner];
     
     // See comment in resetAnimations on why this notification is used.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(resetAnimations) name:UIApplicationDidBecomeActiveNotification object:nil];
-    [self invalidateIntrinsicContentSize];
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
     
-    self.progressLayer.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
-    [self invalidateIntrinsicContentSize];
+    self.progressLayerSpinner.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
     [self updatePath];
-}
-
-- (CGSize)intrinsicContentSize
-{
-    return CGSizeMake(self.bounds.size.width, self.bounds.size.height);
 }
 
 - (void)tintColorDidChange {
     [super tintColorDidChange];
     
-    self.progressLayer.strokeColor = self.tintColor.CGColor;
+    self.progressLayerSpinner.strokeColor = self.tintColor.CGColor;
 }
 
 - (void)resetAnimations {
@@ -107,7 +90,7 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
     animation.toValue = @(2 * M_PI);
     animation.repeatCount = INFINITY;
     animation.removedOnCompletion = NO;
-    [self.progressLayer addAnimation:animation forKey:kMMRingRotationAnimationKey];
+    [self.progressLayerSpinner addAnimation:animation forKey:kMMRingRotationAnimationKey];
     
     CABasicAnimation *headAnimation = [CABasicAnimation animation];
     headAnimation.keyPath = @"strokeStart";
@@ -145,7 +128,7 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
     [animations setAnimations:@[headAnimation, tailAnimation, endHeadAnimation, endTailAnimation]];
     animations.repeatCount = INFINITY;
     animations.removedOnCompletion = NO;
-    [self.progressLayer addAnimation:animations forKey:kMMRingStrokeAnimationKey];
+    [self.progressLayerSpinner addAnimation:animations forKey:kMMRingStrokeAnimationKey];
     
     
     self.isAnimating = true;
@@ -159,8 +142,8 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
     if (!self.isAnimating)
         return;
     
-    [self.progressLayer removeAnimationForKey:kMMRingRotationAnimationKey];
-    [self.progressLayer removeAnimationForKey:kMMRingStrokeAnimationKey];
+    [self.progressLayerSpinner removeAnimationForKey:kMMRingRotationAnimationKey];
+    [self.progressLayerSpinner removeAnimationForKey:kMMRingStrokeAnimationKey];
     self.isAnimating = false;
     
     if (self.hidesWhenStopped) {
@@ -172,26 +155,26 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
 
 - (void)updatePath {
     CGPoint center = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
-    CGFloat radius = MIN(CGRectGetWidth(self.bounds) / 2, CGRectGetHeight(self.bounds) / 2) - self.progressLayer.lineWidth / 2;
+    CGFloat radius = MIN(CGRectGetWidth(self.bounds) / 2, CGRectGetHeight(self.bounds) / 2) - self.progressLayerSpinner.lineWidth / 2;
     CGFloat startAngle = (CGFloat)(0);
     CGFloat endAngle = (CGFloat)(2*M_PI);
     UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:center radius:radius startAngle:startAngle endAngle:endAngle clockwise:YES];
-    self.progressLayer.path = path.CGPath;
-
-    self.progressLayer.strokeStart = 0.f;
-    self.progressLayer.strokeEnd = self.percentComplete;
+    self.progressLayerSpinner.path = path.CGPath;
+    
+    self.progressLayerSpinner.strokeStart = 0.f;
+    self.progressLayerSpinner.strokeEnd = 0.f;
 }
 
 #pragma mark - Properties
 
-- (CAShapeLayer *)progressLayer {
-    if (!_progressLayer) {
-        _progressLayer = [CAShapeLayer layer];
-        _progressLayer.strokeColor = self.tintColor.CGColor;
-        _progressLayer.fillColor = nil;
-        _progressLayer.lineWidth = 1.5f;
+- (CAShapeLayer *)progressLayerSpinner {
+    if (!_progressLayerSpinner) {
+        _progressLayerSpinner = [CAShapeLayer layer];
+        _progressLayerSpinner.strokeColor = self.tintColor.CGColor;
+        _progressLayerSpinner.fillColor = nil;
+        _progressLayerSpinner.lineWidth = 1.5f;
     }
-    return _progressLayer;
+    return _progressLayerSpinner;
 }
 
 - (BOOL)isAnimating {
@@ -199,37 +182,17 @@ static NSString *kMMRingRotationAnimationKey = @"mmmaterialdesignspinner.rotatio
 }
 
 - (CGFloat)lineWidth {
-    return self.progressLayer.lineWidth;
-}
-
-- (NSString *)lineCap
-{
-    return self.progressLayer.lineCap;
+    return self.progressLayerSpinner.lineWidth;
 }
 
 - (void)setLineWidth:(CGFloat)lineWidth {
-    self.progressLayer.lineWidth = lineWidth;
-    [self updatePath];
-}
-
-- (void)setLineCap:(NSString *)lineCap
-{
-    self.progressLayer.lineCap = lineCap;
+    self.progressLayerSpinner.lineWidth = lineWidth;
     [self updatePath];
 }
 
 - (void)setHidesWhenStopped:(BOOL)hidesWhenStopped {
     _hidesWhenStopped = hidesWhenStopped;
     self.hidden = !self.isAnimating && hidesWhenStopped;
-}
-
-- (void)setPercentComplete:(CGFloat)percentComplete {
-    _percentComplete = percentComplete;
-    if (_isAnimating) {
-        return;
-    }
-    self.progressLayer.strokeStart = 0.f;
-    self.progressLayer.strokeEnd = self.percentComplete;
 }
 
 @end
