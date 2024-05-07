@@ -21,7 +21,11 @@ let package = Package(
         .target(
             name: "MMMaterialDesignSpinner",
             dependencies: [],
-            path: "Pod/Classes"
+            path: "Pod/Classes",
+            publicHeadersPath: "Headers",
+            cSettings: [
+                .headerSearchPath("Headers")
+            ]
         ),
         //.testTarget(
         //    name: "FuzeUtilsTests",
